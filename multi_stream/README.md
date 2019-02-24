@@ -1,5 +1,5 @@
 ## How to run
-0. Install the tvm and see the tutorial https://docs.tvm.ai/tutorials/autotvm/tune_conv2d_cuda.html#sphx-glr-tutorials-autotvm-tune-conv2d-cuda-py
+0. Install the tvm and read the tutorial https://docs.tvm.ai/tutorials/autotvm/tune_conv2d_cuda.html#sphx-glr-tutorials-autotvm-tune-conv2d-cuda-py
 The following scripts are modified from this tutorial.
 
 1. Run tuning to generate a log file
