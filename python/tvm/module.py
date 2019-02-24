@@ -176,9 +176,13 @@ class Module(ModuleBase):
                 """Internal wrapped evaluator."""
                 # Wrap feval so we can add more stats in future.
                 blob = feval(*args)
-                fmt = "@" + ("d" * repeat)
+                if repeat < 0:
+                    r_repeat = (-repeat) % 1000
+                else:
+                    r_repeat = repeat
+                fmt = "@" + ("d" * r_repeat)
                 results = struct.unpack(fmt, blob)
-                mean = sum(results) / float(repeat)
+                mean = sum(results) / float(r_repeat)
                 return ProfileResult(mean=mean, results=results)
 
             return evaluator

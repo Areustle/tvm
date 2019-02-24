@@ -1199,9 +1199,27 @@ PackedFunc WrapTimeEvaluator(PackedFunc pf,
   auto ftimer = [pf, ctx, number, repeat, min_repeat_ms](TVMArgs args, TVMRetValue *rv) mutable {
     TVMRetValue temp;
     std::ostringstream os;
+    int n_stream = 1;
+
+    if (repeat < 0) {
+        n_stream = (-repeat) / 1000;
+        repeat = (-repeat) % 1000;
+    }
+
+    DeviceAPI* api = DeviceAPI::Get(ctx);
+
     // skip first time call, to activate lazy compilation components.
-    pf.CallPacked(args, &temp);
-    DeviceAPI::Get(ctx)->StreamSync(ctx, nullptr);
+    std::vector<TVMStreamHandle> handles;
+    for (int l = 0; l < n_stream; l++) {
+        handles.push_back(api->CreateStream(ctx));
+    }
+    for (int l = 0; l < n_stream; l++) {
+        api->SetStream(ctx, handles[l]);
+        pf.CallPacked(args, &temp);
+    }
+    for (int l = 0; l < n_stream; l++) {
+        api->StreamSync(ctx, handles[l]);
+    }
 
     for (int i = 0; i < repeat; ++i) {
       std::chrono::time_point<
@@ -1218,9 +1236,14 @@ PackedFunc WrapTimeEvaluator(PackedFunc pf,
         tbegin = std::chrono::high_resolution_clock::now();
         // start timing
         for (int i = 0; i < number; ++i) {
-          pf.CallPacked(args, &temp);
+            for (int l = 0; l < n_stream; l++) {
+                api->SetStream(ctx, handles[l]);
+                pf.CallPacked(args, &temp);
+            }
         }
-        DeviceAPI::Get(ctx)->StreamSync(ctx, nullptr);
+        for (int l = 0; l < n_stream; l++) {
+            api->StreamSync(ctx, handles[l]);
+        }
         tend = std::chrono::high_resolution_clock::now();
 
         duration_ms = std::chrono::duration_cast<std::chrono::duration<double> >
@@ -1228,7 +1251,7 @@ PackedFunc WrapTimeEvaluator(PackedFunc pf,
       } while (duration_ms < min_repeat_ms);
 
       double speed = std::chrono::duration_cast<std::chrono::duration<double> >(
-          tend - tbegin).count() / number;
+          tend - tbegin).count() / number / n_stream;
       os.write(reinterpret_cast<char*>(&speed), sizeof(speed));
     }
     std::string blob = os.str();
