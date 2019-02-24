@@ -1,15 +1,15 @@
 ## How to run
-0. Install the tvm and read the tutorial https://docs.tvm.ai/tutorials/autotvm/tune_conv2d_cuda.html#sphx-glr-tutorials-autotvm-tune-conv2d-cuda-py
+1. Install the tvm and read the [tutorial about tuning for CUDA GPUs](https://docs.tvm.ai/tutorials/autotvm/tune_conv2d_cuda.html#sphx-glr-tutorials-autotvm-tune-conv2d-cuda-py)
 The following scripts are modified from this tutorial.
 
-1. Run tuning to generate a log file
+2. Run tuning to generate a log file
 ```bash
 python3 tune_conv2d_cuda.py
 ```
 It will output a log file `conv2d.log`
 
 
-2. Replay the log file and measure the kernels under single-stream setting and multi-stream setting respectively
+3. Replay the log file and measure the kernels under single-stream setting and multi-stream setting respectively
 ```bash
 python3 replay.py
 ```
